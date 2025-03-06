@@ -16,8 +16,7 @@ function plot_time_series_distribution(raw_emg_data, subject_id, condition_id, a
         hold on;
 
         for m = 1:length(muscle_labels)
-            %histogram(raw_emg_data{act}(:, m), 'Normalization', 'probability', 'BinWidth', 0.01, 'DisplayStyle', 'stairs');
-            histogram(raw_emg_data{act}(:, m), 'Normalization', 'probability', 'BinMethod', 'scott', 'DisplayStyle', 'stairs');
+            histogram(raw_emg_data{act}(:, m), 'Normalization', 'probability', 'BinWidth', 0.01, 'DisplayStyle', 'stairs');
         end
 
         hold off;

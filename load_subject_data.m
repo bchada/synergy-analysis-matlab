@@ -5,13 +5,13 @@ function [H_matrices, rms_resid_values, activity_names, raw_emg_data] = load_sub
     % Path to subject's data folder
     subject_path = fullfile(data_folder, subject_id, condition_id);
 
-    % Preallocate storage
+    % Preallocate storage for single subject
     H_matrices = cell(num_activities, 1);
-    rms_resid_values = zeros(num_activities, 1); % Store RMS Resid values
+    rms_resid_values = zeros(num_activities, 1);
     activity_names = cell(num_activities, 1);
     raw_emg_data = cell(num_activities, 1);
 
-    % Loop through all 8 activities
+    % Loop through all 8 activities for the selected subject
     for act = 1:num_activities
         filename = fullfile(subject_path, sprintf('processed-emg-%02d.csv', act));
 
@@ -26,7 +26,7 @@ function [H_matrices, rms_resid_values, activity_names, raw_emg_data] = load_sub
             WE = temp_data(:, 11); BR = temp_data(:, 12);
 
             emg_data = [BB, PD, AD, MD, TL, WF, WE, BR];
-            raw_emg_data{act} = emg_data; % Store raw data
+            raw_emg_data{act} = emg_data; % Store raw data for this subject
 
             % Generate random initialization matrix "X"
             X = rand(size(emg_data, 1), num_synergies);
@@ -50,5 +50,3 @@ function [H_matrices, rms_resid_values, activity_names, raw_emg_data] = load_sub
         end
     end
 end
-
-

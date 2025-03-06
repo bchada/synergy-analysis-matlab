@@ -1,0 +1,96 @@
+% % function plot_time_series_distribution(raw_emg_data, subject_id, condition_id, activity_names)
+% %     num_activities = length(raw_emg_data);
+% % 
+% %     if num_activities == 0
+% %         disp('No activity data to plot.');
+% %         return;
+% %     end
+% % 
+% %     muscle_labels = {'BB', 'PD', 'AD', 'MD', 'TL', 'WF', 'WE', 'BR'};
+% % 
+% %     figure;
+% %     tiledlayout(2,4, 'TileSpacing', 'compact', 'Padding', 'compact'); % 2x4 grid
+% % 
+% %     for act = 1:num_activities
+% %         nexttile;
+% %         hold on;
+% % 
+% %         for m = 1:length(muscle_labels)
+% %             histogram(raw_emg_data{act}(:, m), 'Normalization', 'probability', 'BinWidth', 0.01, 'DisplayStyle', 'stairs');
+% %         end
+% % 
+% %         hold off;
+% %         xlabel('EMG Signal Amplitude');
+% %         ylabel('Probability');
+% %         title(sprintf('%s - %s', subject_id, activity_names{act}), 'FontSize', 12);
+% %         legend(muscle_labels, 'Location', 'northeast', 'FontSize', 7);
+% %         grid on;
+% %     end
+% % end
+
+function plot_time_series_distribution(raw_emg_data, subject_id, condition_id, activity_names)
+    % Plots the time-series distribution (histograms) for each activity.
+    % Saves the distribution to avoid redundant computations.
+
+    % Define folder for saved distributions
+    save_path = fullfile(pwd, 'Saved_TimeSeries_Distributions');
+    if ~exist(save_path, 'dir')
+        mkdir(save_path); % Create folder if it doesn't exist
+    end
+
+    % Define save filename
+    save_file = fullfile(save_path, sprintf('TimeSeries_Subject%s_Condition%s.mat', subject_id, condition_id));
+
+    % If file exists, load saved data to save computation time
+    if exist(save_file, 'file')
+        disp(['Loading saved time-series distribution for Subject ' subject_id ' Condition ' condition_id '...']);
+        load(save_file, 'histogram_data');
+    else
+        disp(['Computing time-series distribution for Subject ' subject_id ' Condition ' condition_id '...']);
+
+        num_activities = length(raw_emg_data);
+        num_muscles = 8; % Assuming 8 muscle channels
+        muscle_labels = {'BB', 'PD', 'AD', 'MD', 'TL', 'WF', 'WE', 'BR'};
+        
+        % Colors for each muscle (Ensures clear visualization)
+        muscle_colors = lines(num_muscles);
+        
+        histogram_data = cell(num_activities, 1);
+
+        for act = 1:num_activities
+            % Store histogram data for each muscle
+            histograms = cell(num_muscles, 1);
+            for m = 1:num_muscles
+                [counts, edges] = histcounts(raw_emg_data{act}(:, m), 50, 'Normalization', 'probability');
+                histograms{m} = struct('counts', counts, 'edges', edges);
+            end
+            histogram_data{act} = histograms;
+        end
+
+        % Save computed histograms
+        save(save_file, 'histogram_data');
+        disp(['Saved time-series distribution for Subject ' subject_id ' Condition ' condition_id '.']);
+    end
+
+    % Plot the saved distributions
+    figure;
+    tiledlayout(2, 4, 'TileSpacing', 'compact', 'Padding', 'compact');
+
+    for act = 1:num_activities
+        nexttile;
+        hold on;
+
+        % Retrieve histogram data and plot each muscle in color
+        for m = 1:num_muscles
+            hist_data = histogram_data{act}{m};
+            bar(hist_data.edges(1:end-1), hist_data.counts, 'FaceColor', muscle_colors(m, :), 'EdgeColor', 'none', 'FaceAlpha', 0.5);
+        end
+
+        hold off;
+        xlabel('EMG Signal Amplitude');
+        ylabel('Probability');
+        title(sprintf('%s - %s', subject_id, activity_names{act}), 'FontSize', 12);
+        legend(muscle_labels, 'Location', 'northeast', 'FontSize', 7);
+        grid on;
+    end
+end
