@@ -1,0 +1,61 @@
+function plot_3D_histogram(raw_emg_data, subject_id, condition_id, participant_ids)
+    % Generates a 3D histogram comparing EMG signal amplitude distributions
+    % for Activity 1, Condition 1 across multiple participants.
+    
+    num_bins = 50; % Number of bins for histogram
+    num_muscles = 8; % Number of muscle channels
+    muscle_labels = {'BB', 'PD', 'AD', 'MD', 'TL', 'WF', 'WE', 'BR'};
+
+    % Define colors for each muscle
+    muscle_colors = lines(num_muscles);
+
+    % Identify valid participants (only those with data)
+    valid_indices = find(~cellfun(@isempty, raw_emg_data));
+    valid_participants = participant_ids(valid_indices); % Extract actual labels
+    num_valid_participants = length(valid_indices);
+    
+    % Ensure we have data to plot
+    if num_valid_participants == 0
+        warning('No valid EMG data found for any participants.');
+        return;
+    end
+
+    % Initialize figure
+    figure;
+    hold on;
+
+    % Loop through valid participants and plot histograms for each muscle
+    for p_idx = 1:num_valid_participants
+        p = valid_indices(p_idx);
+        emg_data = raw_emg_data{p};
+
+        for m = 1:num_muscles
+            muscle_data = emg_data(:, m); % Extract muscle data
+
+            % Compute histogram
+            [counts, edges] = histcounts(muscle_data, num_bins, 'Normalization', 'probability');
+            bin_centers = edges(1:end-1) + diff(edges) / 2; % Compute bin centers
+
+            % Offset Y-axis to align participant IDs
+            y_shift = p_idx;  
+
+            % Plot 3D histogram using `plot3()`
+            plot3(bin_centers, ones(size(bin_centers)) * y_shift, counts, ...
+                'Color', muscle_colors(m, :), 'LineWidth', 2);
+        end
+    end
+
+    hold off;
+    xlabel('EMG Signal Amplitude');
+    ylabel('Participants');
+    zlabel('Probability Density');
+    title(sprintf('3D Histogram: Activity 1 - Condition %s Across Participants', condition_id), 'FontSize', 14);
+    
+    % Set correct participant labels
+    yticks(1:num_valid_participants);
+    yticklabels(valid_participants); 
+    
+    grid on;
+    legend(muscle_labels, 'Location', 'northeastoutside');
+    view(-30, 30); % Adjust viewing angle
+end
